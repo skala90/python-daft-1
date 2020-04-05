@@ -72,4 +72,4 @@ def find_patient(id):
     if len(res) == 1:
         return {"name":res[0]["name"], "surename":res[0]["surename"]}
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=204, detail="Item not found")
