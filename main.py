@@ -94,9 +94,15 @@ def find_patient(id):
         raise HTTPException(status_code=204, detail="Item not found")
 
 
+from fastapi.templating import Jinja2Templates
+templates = Jinja2Templates(directory="templates")
+
 @app.get("/welcome")
-def welcome():
-    return {"message": "Hello World during the coronavirus pandemic!"}
+def welcome(*, response: Response, session_token: str = Cookie(None)):
+    if session_token in app.session_tokens:
+        return templates.TemplateResponse("welcome.html", {"request": request, "user": "trudnY"})
+    else:
+        return {"message": "Hello World during the coronavirus pandemic!"}
 
 
 @app.post("/login")
@@ -114,7 +120,6 @@ def get_current_user(
         )
     ).hexdigest()
     app.session_tokens.append(session_token)
-    print(app.session_tokens)
     response.set_cookie(key="session_token", value=session_token)
     response.headers["Location"] = "/welcome"
     response.status_code = status.HTTP_302_FOUND
