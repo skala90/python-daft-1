@@ -86,7 +86,6 @@ def find_patient(id):
 def welcome():
 	return {"message": "Hello World during the coronavirus pandemic!"}
 
-
 @app.post("/login")
 def get_current_username(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = secrets.compare_digest(credentials.username, "trudnY")
@@ -103,3 +102,10 @@ def get_current_username(response: Response, credentials: HTTPBasicCredentials =
     	response.set_cookie(key="session_token",value=s_token)
     	response = RedirectResponse(url='/welcome')
     return response
+
+@app.post("/logout")
+def logout(*, response: Response, session_token: str = Cookie(None)):
+	if session_token not in app.tokens:
+		raise HTTPException(status_code=401, detail="Unathorised")
+	app.tokens.delete(session_token)
+	return RedirectResponse("/")
