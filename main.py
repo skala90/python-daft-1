@@ -118,7 +118,7 @@ def get_current_username(
         response.set_cookie(key="session_token", value=s_token)
         response.headers["Location"] = "/welcome"
         response.status_code = status.HTTP_302_FOUND
-    return response
+
 
 
 @app.post("/logout")
