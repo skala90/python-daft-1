@@ -132,10 +132,10 @@ def delete_patient(
         response.status_code = status.HTTP_204_NO_CONTENT 
         response.headers["Location"] = f"/patient/{id}"
 
-    with open("patient_data.jsonl", "w", encoding="utf") as outfile:
-        for item in new_list_of_patients: 
-            json.dump(item, outfile, ensure_ascii=False)
-            outfile.write("\n")
+        with open("patient_data.jsonl", "w", encoding="utf") as outfile:
+            for item in new_list_of_patients: 
+                json.dump(item, outfile, ensure_ascii=False)
+                outfile.write("\n")
 
     else:
         raise HTTPException(status_code=401, detail="Unathorised")
