@@ -41,7 +41,7 @@ def method(request: Request):
 
 class PatientInput(BaseModel):
     name: str
-    surename: str
+    surname: str
 
 
 class PatientOutput(BaseModel):
@@ -76,10 +76,17 @@ def save_patient(PatientOutput):
 
 
 @app.post("/patient/", response_model=PatientOutput)
-def receive_patient(rq: PatientInput):
-    result = PatientOutput(patient=rq.dict(), id=update_counter())
-    save_patient(result)
-    return result
+def receive_patient(response: Response, rq: PatientInput, session_token: str = Cookie(None)):
+    if session_token in app.session_tokens:
+        new_id = update_counter()
+        result = PatientOutput(patient=rq.dict(), id=new_id)
+        save_patient(result)
+        response.set_cookie(key="session_token", value=session_token)
+        response.headers["Location"] = f"/patient/{new_id}"
+        response.status_code = status.HTTP_302_FOUND
+    else:
+        raise HTTPException(status_code=401, detail="Unathorised")
+
 
 @app.get("/patient/")
 def diaplay_patients(request: Request, session_token: str = Cookie(None)):
@@ -89,7 +96,7 @@ def diaplay_patients(request: Request, session_token: str = Cookie(None)):
         res = {}
         for item in list_of_patients:
             new_key = f'id_{item["id"]}'
-            new_val = {"name":item["name"],"surname":item["surename"]}
+            new_val = {"name":item["name"],"surname":item["surname"]}
             res[new_key] = new_val 
 
         return res
@@ -104,7 +111,7 @@ def find_patient(id):
     res = [item for item in list_of_patients if item["id"] == int(id)]
     print(res)
     if len(res) == 1:
-        return {"name": res[0]["name"], "surename": res[0]["surename"]}
+        return {"name": res[0]["name"], "surname": res[0]["surname"]}
     else:
         raise HTTPException(status_code=204, detail="Item not found")
 
