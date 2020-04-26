@@ -81,6 +81,21 @@ def receive_patient(rq: PatientInput):
     save_patient(result)
     return result
 
+@app.get("/patient/")
+def diaplay_patients(request: Request, session_token: str = Cookie(None)):
+    if session_token in app.session_tokens:
+        list_of_patients = load_patient_db()
+
+        res = {}
+        for item in list_of_patients:
+            new_key = f'id_{item["id"]}'
+            new_val = {"name":item["name"],"surname":item["surename"]}
+            res[new_key] = new_val 
+
+        return res
+    else:
+        raise HTTPException(status_code=401, detail="Unathorised")
+
 
 @app.get("/patient/{id}")
 def find_patient(id):
