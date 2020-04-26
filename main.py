@@ -121,16 +121,16 @@ def find_patient(id, session_token: str = Cookie(None)):
 
 @app.delete("/patient/{id}")
 def delete_patient(
-    response: Response, patient_id: int, session_token: str = Cookie(None)
+    response: Response, id: int, session_token: str = Cookie(None)
 ):
     if session_token in app.session_tokens:
         list_of_patients = load_patient_db()
         new_list_of_patients = []
         for item in list_of_patients:
-            if item["id"] != patient_id:
+            if item["id"] != id:
                 new_list_of_patients.append(item)
         response.status_code = status.HTTP_204_NO_CONTENT
-        response.headers["Location"] = f"/patient/{patient_id}"
+        response.headers["Location"] = f"/patient/{id}"
     else:
         raise HTTPException(status_code=401, detail="Unathorised")
 
@@ -164,6 +164,7 @@ def get_current_user(
             encoding="utf8",
         )
     ).hexdigest()
+    print(session_token)
     app.session_tokens.append(session_token)
     response.set_cookie(key="session_token", value=session_token)
     response.headers["Location"] = "/welcome"
