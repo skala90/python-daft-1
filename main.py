@@ -100,7 +100,8 @@ def get_current_username(response: Response, credentials: HTTPBasicCredentials =
     	s_token = sha256(bytes(f"{correct_username}{correct_password}", encoding='utf8')).hexdigest()
     	app.tokens += s_token
     	response.set_cookie(key="session_token",value=s_token)
-    	response = RedirectResponse(url='/welcome')
+    	response.headers["Location"] = "/welcome"
+        response.status_code = status.HTTP_302_FOUND 
     return response
 
 @app.post("/logout")
