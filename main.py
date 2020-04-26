@@ -7,7 +7,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import RedirectResponse
 
 app = FastAPI()
-app.tokens = []
+app.session_tokens = []
+app.secret_key = "very constant and random secret, best 64 characters, here it is."
 
 
 security = HTTPBasic()
@@ -120,7 +121,7 @@ def get_current_user(
 
 @app.post("/logout")
 def logout(*, response: Response, session_token: str = Cookie(None)):
-    if session_token not in app.tokens:
+    if session_token not in app.session_tokens:
         raise HTTPException(status_code=401, detail="Unathorised")
-    app.tokens.delete(session_token)
+    app.session_tokens.delete(session_token)
     return RedirectResponse("/")
