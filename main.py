@@ -98,12 +98,11 @@ from fastapi.templating import Jinja2Templates
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/welcome")
-def welcome(*, response: Response, session_token: str = Cookie(None)):
+def welcome(request: Request, session_token: str = Cookie(None)):
     if session_token in app.session_tokens:
         return templates.TemplateResponse("welcome.html", {"request": request, "user": "trudnY"})
     else:
-        return {"message": "Hello World during the coronavirus pandemic!"}
-
+        raise HTTPException(status_code=401, detail="Unathorised")
 
 @app.post("/login")
 def get_current_user(
@@ -123,7 +122,6 @@ def get_current_user(
     response.set_cookie(key="session_token", value=session_token)
     response.headers["Location"] = "/welcome"
     response.status_code = status.HTTP_302_FOUND
-
 
 @app.post("/logout")
 def logout(*, response: Response, session_token: str = Cookie(None)):
