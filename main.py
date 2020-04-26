@@ -76,7 +76,9 @@ def save_patient(PatientOutput):
 
 
 @app.post("/patient/", response_model=PatientOutput)
-def receive_patient(response: Response, rq: PatientInput, session_token: str = Cookie(None)):
+def receive_patient(
+    response: Response, rq: PatientInput, session_token: str = Cookie(None)
+):
     if session_token in app.session_tokens:
         new_id = update_counter()
         result = PatientOutput(patient=rq.dict(), id=new_id)
@@ -96,8 +98,8 @@ def diaplay_patients(request: Request, session_token: str = Cookie(None)):
         res = {}
         for item in list_of_patients:
             new_key = f'id_{item["id"]}'
-            new_val = {"name":item["name"],"surname":item["surname"]}
-            res[new_key] = new_val 
+            new_val = {"name": item["name"], "surname": item["surname"]}
+            res[new_key] = new_val
 
         return res
     else:
@@ -105,26 +107,47 @@ def diaplay_patients(request: Request, session_token: str = Cookie(None)):
 
 
 @app.get("/patient/{id}")
-def find_patient(id):
-    list_of_patients = load_patient_db()
-    print(list_of_patients)
-    res = [item for item in list_of_patients if item["id"] == int(id)]
-    print(res)
-    if len(res) == 1:
-        return {"name": res[0]["name"], "surname": res[0]["surname"]}
+def find_patient(id, session_token: str = Cookie(None)):
+    if session_token in app.session_tokens:
+        list_of_patients = load_patient_db()
+        res = [item for item in list_of_patients if item["id"] == int(id)]
+        if len(res) == 1:
+            return {"name": res[0]["name"], "surname": res[0]["surname"]}
+        else:
+            raise HTTPException(status_code=204, detail="Item not found")
     else:
-        raise HTTPException(status_code=204, detail="Item not found")
+        raise HTTPException(status_code=401, detail="Unathorised")
+
+
+@app.delete("/patient/{id}")
+def delete_patient(
+    response: Response, patient_id: int, session_token: str = Cookie(None)
+):
+    if session_token in app.session_tokens:
+        list_of_patients = load_patient_db()
+        new_list_of_patients = []
+        for item in list_of_patients:
+            if item["id"] != patient_id:
+                new_list_of_patients.append(item)
+        response.status_code = status.HTTP_204_NO_CONTENT
+    else:
+        raise HTTPException(status_code=401, detail="Unathorised")
 
 
 from fastapi.templating import Jinja2Templates
+
 templates = Jinja2Templates(directory="templates")
+
 
 @app.get("/welcome")
 def welcome(request: Request, session_token: str = Cookie(None)):
     if session_token in app.session_tokens:
-        return templates.TemplateResponse("welcome.html", {"request": request, "user": "trudnY"})
+        return templates.TemplateResponse(
+            "welcome.html", {"request": request, "user": "trudnY"}
+        )
     else:
         raise HTTPException(status_code=401, detail="Unathorised")
+
 
 @app.post("/login")
 def get_current_user(
@@ -144,6 +167,7 @@ def get_current_user(
     response.set_cookie(key="session_token", value=session_token)
     response.headers["Location"] = "/welcome"
     response.status_code = status.HTTP_302_FOUND
+
 
 @app.post("/logout")
 def logout(*, response: Response, session_token: str = Cookie(None)):
