@@ -1,8 +1,16 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import Depends, FastAPI, Request, HTTPException, Cookie, status, Response
 from pydantic import BaseModel
+from hashlib import sha256
 import json
+import secrets
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.responses import RedirectResponse
 
 app = FastAPI()
+app.tokens = []
+
+
+security = HTTPBasic()
 
 @app.get("/")
 def root():
@@ -77,3 +85,21 @@ def find_patient(id):
 @app.get("/welcome")
 def welcome():
 	return {"message": "Hello World during the coronavirus pandemic!"}
+
+
+@app.post("/login")
+def get_current_username(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, "trudnY")
+    correct_password = secrets.compare_digest(credentials.password, "PaC13Nt")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    else:
+    	s_token = sha256(bytes(f"{correct_username}{correct_password}", encoding='utf8')).hexdigest()
+    	app.tokens += s_token
+    	response.set_cookie(key="session_token",value=s_token)
+    	response = RedirectResponse(url='/welcome')
+    return response
