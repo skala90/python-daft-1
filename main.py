@@ -73,3 +73,7 @@ def find_patient(id):
         return {"name":res[0]["name"], "surename":res[0]["surename"]}
     else:
         raise HTTPException(status_code=204, detail="Item not found")
+
+@app.get("/welcome")
+def welcome():
+	return {"message": "Hello World during the coronavirus pandemic!"}
