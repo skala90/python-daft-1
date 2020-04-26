@@ -114,6 +114,7 @@ def get_current_user(
         )
     ).hexdigest()
     app.session_tokens.append(session_token)
+    print(app.session_tokens)
     response.set_cookie(key="session_token", value=session_token)
     response.headers["Location"] = "/welcome"
     response.status_code = status.HTTP_302_FOUND
@@ -123,5 +124,5 @@ def get_current_user(
 def logout(*, response: Response, session_token: str = Cookie(None)):
     if session_token not in app.session_tokens:
         raise HTTPException(status_code=401, detail="Unathorised")
-    app.session_tokens.delete(session_token)
+    app.session_tokens.remove(session_token)
     return RedirectResponse("/")
