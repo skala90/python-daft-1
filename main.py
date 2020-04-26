@@ -99,26 +99,23 @@ def welcome():
 
 
 @app.post("/login")
-def get_current_username(
+def get_current_user(
     response: Response, credentials: HTTPBasicCredentials = Depends(security)
 ):
     correct_username = secrets.compare_digest(credentials.username, "trudnY")
     correct_password = secrets.compare_digest(credentials.password, "PaC13Nt")
     if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Basic"},
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    session_token = sha256(
+        bytes(
+            f"{credentials.username}{credentials.password}{app.secret_key}",
+            encoding="utf8",
         )
-    else:
-        s_token = sha256(
-            bytes(f"{correct_username}{correct_password}", encoding="utf8")
-        ).hexdigest()
-        app.tokens += s_token
-        response.set_cookie(key="session_token", value=s_token)
-        response.headers["Location"] = "/welcome"
-        response.status_code = status.HTTP_302_FOUND
-
+    ).hexdigest()
+    app.session_tokens.append(session_token)
+    response.set_cookie(key="session_token", value=session_token)
+    response.headers["Location"] = "/welcome"
+    response.status_code = status.HTTP_302_FOUND
 
 
 @app.post("/logout")
