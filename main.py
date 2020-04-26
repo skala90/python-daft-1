@@ -130,6 +130,7 @@ def delete_patient(
             if item["id"] != patient_id:
                 new_list_of_patients.append(item)
         response.status_code = status.HTTP_204_NO_CONTENT
+        response.headers["Location"] = f"/patient/{patient_id}"
     else:
         raise HTTPException(status_code=401, detail="Unathorised")
 
