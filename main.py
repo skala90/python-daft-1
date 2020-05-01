@@ -141,11 +141,11 @@ async def get_sales(category:str):
 
     if category == "customers":
         sql_stmt = """
-        SELECT a.CustomerId, a.Email, a.Phone, round(Sum(b.Total),2) as Sum
+        SELECT a.CustomerId, a.Email, coalesce(a.Phone,'None') as Phone, round(Sum(b.Total),2) as Sum
         from customers a
         inner join invoices b on a.customerId=b.CustomerId
         group by a.CustomerId, a.Email, a.Phone
-        order by sum(b.Total) desc, a.CustomerId
+        order by sum(b.Total) desc, a.CustomerId desc
         """
         app.db_connection.row_factory = sqlite3.Row
         cursor = app.db_connection.execute(sql_stmt)
