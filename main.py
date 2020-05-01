@@ -141,7 +141,7 @@ async def get_sales(category:str):
 
     if category == "customers":
         sql_stmt = """
-        SELECT a.CustomerId, a.Email, coalesce(a.Phone,'None') as Phone, round(Sum(b.Total),2) as Sum
+        SELECT a.CustomerId, a.Email, a.Phone as Phone, round(Sum(b.Total),2) as Sum
         from customers a
         inner join invoices b on a.customerId=b.CustomerId
         group by a.CustomerId, a.Email, a.Phone
@@ -152,6 +152,18 @@ async def get_sales(category:str):
         
         customer = cursor.fetchall()
         return customer
+    
+    elif category == "genres":
+        app.db_connection.row_factory = sqlite.Row
+        cursor = app.db_connection.execute(
+			"""SELECT c.Name, SUM(Quantity) AS Sum 
+            FROM invoice_items a
+			INNER JOIN tracks b ON a.TrackId = b.TrackId
+			INNER JOIN genres c ON b.GenreId = c.GenreId
+			GROUP BY b.GenreId 
+            ORDER BY Sum DESC, c.Name""")
+        genres = cursor.fetchall()
+        return genres
     else:
         raise HTTPException(
             status_code=404, detail={"error": "Not implemented."}
