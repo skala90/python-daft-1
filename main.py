@@ -141,7 +141,7 @@ async def get_sales(category:str):
 
     if category == "customers":
         sql_stmt = """
-        SELECT a.CustomerId, a.Email, a.Phone, round(Sum(b.Total),2) as sum
+        SELECT a.CustomerId, a.Email, a.Phone, round(Sum(b.Total),2) as Sum
         from customers a
         inner join invoices b on a.customerId=b.CustomerId
         group by a.CustomerId, a.Email, a.Phone
