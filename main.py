@@ -88,11 +88,11 @@ async def get_album_data(album_id: int):
             WHERE AlbumId = ?""",
             (album_id,),
         )
-    album_data = cursor.fetchall()
+    album_data = cursor.fetchone()
     if len(album_data) == 0:
         # return {"detail": {"error": "This composer does not have any songs."}}
         raise HTTPException(
             status_code=404, detail={"error": "There is no album with such ID."}
         )
-    else:
-        return album_data[0]
+    
+    return album_data
