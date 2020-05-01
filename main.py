@@ -154,7 +154,7 @@ async def get_sales(category:str):
         return customer
     
     elif category == "genres":
-        app.db_connection.row_factory = sqlite.Row
+        app.db_connection.row_factory = sqlite3.Row
         cursor = app.db_connection.execute(
 			"""SELECT c.Name, SUM(Quantity) AS Sum 
             FROM invoice_items a
