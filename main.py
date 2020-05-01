@@ -41,5 +41,58 @@ async def get_composers(composer_name: str):
     data = cursor.fetchall()
     if len(data) == 0:
         # return {"detail": {"error": "This composer does not have any songs."}}
-        raise HTTPException(status_code=404, detail={"error":"This composer does not have any songs."})
+        raise HTTPException(
+            status_code=404, detail={"error": "This composer does not have any songs."}
+        )
     return data
+
+
+@app.post("/albums")
+async def add_new_album(album_details: dict):
+    app.db_connection.row_factory = lambda cursor, row: row[0]
+    cursor = app.db_connection.execute(
+        """SELECT ArtistId
+        FROM artists
+        WHERE ArtistId = ?""",
+        (album_details["artist_id"],),
+    )
+    artist = cursor.fetchall()
+    if len(artist) == 0:
+        raise HTTPException(
+            status_code=404, detail={"error": "There is no artist with such ID."}
+        )
+    else:
+        cursor = app.db_connection.execute(
+            """INSERT INTO albums (artistid, title) VALUES (?,?)""",
+            (album_details["artist_id"], album_details["title"]),
+        )
+        app.db_connection.commit()
+        new_album_id = cursor.lastrowid
+        
+        app.db_connection.row_factory = sqlite3.Row
+        cursor = app.db_connection.execute(
+            """SELECT AlbumId, Title, ArtistId
+        FROM albums 
+        WHERE AlbumId = ?""",
+            (new_album_id,),
+        )
+        new_album_data = cursor.fetchall()
+        return new_album_data[0]
+
+@app.get("/album/{album_id}")
+async def get_album_data(album_id: int):
+    app.db_connection.row_factory = sqlite3.Row
+    cursor = app.db_connection.execute(
+            """SELECT AlbumId, Title, ArtistId
+            FROM albums 
+            WHERE AlbumId = ?""",
+            (album_id,),
+        )
+    album_data = cursor.fetchall()
+    if len(album_data) == 0:
+        # return {"detail": {"error": "This composer does not have any songs."}}
+        raise HTTPException(
+            status_code=404, detail={"error": "There is no album with such ID."}
+        )
+    else:
+        return album_data[0]
