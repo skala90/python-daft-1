@@ -1,5 +1,5 @@
 import sqlite3
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 
 app = FastAPI()
 
@@ -47,7 +47,7 @@ async def get_composers(composer_name: str):
     return data
 
 
-@app.post("/albums")
+@app.post("/albums", status_code=status.HTTP_201_CREATED)
 async def add_new_album(album_details: dict):
     app.db_connection.row_factory = lambda cursor, row: row[0]
     cursor = app.db_connection.execute(
