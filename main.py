@@ -79,7 +79,7 @@ async def add_new_album(album_details: dict):
         new_album_data = cursor.fetchall()
         return new_album_data[0]
 
-@app.get("/album/{album_id}")
+@app.get("/albums/{album_id}")
 async def get_album_data(album_id: int):
     app.db_connection.row_factory = sqlite3.Row
     cursor = app.db_connection.execute(
@@ -96,3 +96,13 @@ async def get_album_data(album_id: int):
         )
     
     return album_data
+
+
+@app.put("/customers/{customer_id}")
+async def edit_customer_data(customer_id:int, customer_update_data: dict):
+    cursor = app.db_connection.execute("SELECT CustomerId FROM customers WHERE CustomerId = ?",
+		(customer_id, ))
+    result = cursor.fetchone()
+    if len(result):
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"detail":{"error":"Customer with that ID does not exist."}}
