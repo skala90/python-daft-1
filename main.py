@@ -68,7 +68,7 @@ async def add_new_album(album_details: dict):
         )
         app.db_connection.commit()
         new_album_id = cursor.lastrowid
-        
+
         app.db_connection.row_factory = sqlite3.Row
         cursor = app.db_connection.execute(
             """SELECT AlbumId, Title, ArtistId
@@ -76,33 +76,62 @@ async def add_new_album(album_details: dict):
         WHERE AlbumId = ?""",
             (new_album_id,),
         )
-        new_album_data = cursor.fetchall()
-        return new_album_data[0]
+        new_album_data = cursor.fetchone()
+        return new_album_data
+
 
 @app.get("/albums/{album_id}")
 async def get_album_data(album_id: int):
     app.db_connection.row_factory = sqlite3.Row
     cursor = app.db_connection.execute(
-            """SELECT AlbumId, Title, ArtistId
+        """SELECT AlbumId, Title, ArtistId
             FROM albums 
             WHERE AlbumId = ?""",
-            (album_id,),
-        )
+        (album_id,),
+    )
     album_data = cursor.fetchone()
     if len(album_data) == 0:
         # return {"detail": {"error": "This composer does not have any songs."}}
         raise HTTPException(
             status_code=404, detail={"error": "There is no album with such ID."}
         )
-    
+
     return album_data
 
 
 @app.put("/customers/{customer_id}")
-async def edit_customer_data(customer_id:int, customer_update_data: dict):
-    cursor = app.db_connection.execute("SELECT CustomerId FROM customers WHERE CustomerId = ?",
-		(customer_id, ))
+async def edit_customer_data(customer_id: int, customer_update_data: dict):
+    cursor = app.db_connection.execute(
+        "SELECT CustomerId FROM customers WHERE CustomerId = ?", (customer_id,)
+    )
     result = cursor.fetchone()
-    if len(result):
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {"detail":{"error":"Customer with that ID does not exist."}}
+    if len(result)==0:
+        raise HTTPException(
+            status_code=404, detail={"error": "Customer with given ID does not exist."}
+        )
+    list_of_possible_fields_to_update = (
+        "company",
+        "address",
+        "city",
+        "state",
+        "country",
+        "postalcode",
+        "fax",
+    )
+    fields_to_update = []
+
+    for key, val in customer_update_data.items():
+        if key in list_of_possible_fields_to_update:
+            fields_to_update.append(f"{key}='{val}'")
+
+    update_values = ", ".join(fields_to_update)
+    sql_stmt = f"UPDATE customers SET {update_values} WHERE customerid={customer_id}"
+    cursor = app.db_connection.execute(sql_stmt)
+    app.db_connection.commit()
+
+    app.db_connection.row_factory = sqlite3.Row
+    cursor = app.db_connection.execute(
+        "SELECT * FROM customers WHERE CustomerId = ?", (customer_id,)
+    )
+    customer = cursor.fetchone()
+    return customer
