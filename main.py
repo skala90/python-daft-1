@@ -105,7 +105,7 @@ async def edit_customer_data(customer_id: int, customer_update_data: dict):
         "SELECT CustomerId FROM customers WHERE CustomerId = ?", (customer_id,)
     )
     result = cursor.fetchone()
-    if len(result)==0:
+    if result is None:
         raise HTTPException(
             status_code=404, detail={"error": "Customer with given ID does not exist."}
         )
