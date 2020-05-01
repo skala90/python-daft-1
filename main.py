@@ -135,3 +135,24 @@ async def edit_customer_data(customer_id: int, customer_update_data: dict):
     )
     customer = cursor.fetchone()
     return customer
+
+@app.get("/sales")
+async def get_sales(category:str):
+
+    if category == "customers":
+        sql_stmt = """
+        SELECT a.CustomerId, a.Email, a.Phone, round(Sum(b.Total),2) as sum
+        from customers a
+        inner join invoices b on a.customerId=b.CustomerId
+        group by a.CustomerId, a.Email, a.Phone
+        order by sum(b.Total) desc, a.CustomerId
+        """
+        app.db_connection.row_factory = sqlite3.Row
+        cursor = app.db_connection.execute(sql_stmt)
+        
+        customer = cursor.fetchall()
+        return customer
+    else:
+        raise HTTPException(
+            status_code=404, detail={"error": "Not implemented."}
+        )
